@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -53,15 +54,14 @@ class _BluState extends State<Blu> {
     super.dispose();
   }
 
+  /// Only used on Android. iOS triggers its native Bluetooth prompt
+  /// automatically when FlutterBluePlus.startScan is called.
   Future<bool> ensureBlePermissions() async {
+    if (Platform.isIOS) return true;
+
     final scan = await Permission.bluetoothScan.request();
     final connect = await Permission.bluetoothConnect.request();
     await Permission.locationWhenInUse.request();
-
-    if (scan.isPermanentlyDenied || connect.isPermanentlyDenied) {
-      await openAppSettings();
-      return false;
-    }
 
     return scan.isGranted && connect.isGranted;
   }
@@ -114,7 +114,15 @@ class _BluState extends State<Blu> {
       }
     });
 
-    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 6));
+    try {
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 6));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+        _status = "Scan failed: $e";
+      });
+    }
   }
 
   Future<void> _connect(ScanResult r) async {
@@ -310,11 +318,13 @@ class _BluState extends State<Blu> {
                               onPressed: (_scanning || _isConnected)
                                   ? null
                                   : () async {
-                                      final ok = await ensureBlePermissions();
-                                      if (!ok) {
-                                        setState(() => _status =
-                                            "Bluetooth permission denied. Please enable it in Settings.");
-                                        return;
+                                      if (!Platform.isIOS) {
+                                        final ok = await ensureBlePermissions();
+                                        if (!ok) {
+                                          setState(() => _status =
+                                              "Bluetooth permission denied");
+                                          return;
+                                        }
                                       }
                                       await _startScan();
                                     },

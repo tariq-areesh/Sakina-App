@@ -57,6 +57,12 @@ class _BluState extends State<Blu> {
     final scan = await Permission.bluetoothScan.request();
     final connect = await Permission.bluetoothConnect.request();
     await Permission.locationWhenInUse.request();
+
+    if (scan.isPermanentlyDenied || connect.isPermanentlyDenied) {
+      await openAppSettings();
+      return false;
+    }
+
     return scan.isGranted && connect.isGranted;
   }
 
@@ -229,12 +235,8 @@ class _BluState extends State<Blu> {
       _connectionSub = null;
 
       try {
-        if (_txChar != null) {
-          await _txChar!.setNotifyValue(false);
-        }
+        await device.disconnect();
       } catch (_) {}
-
-      await device.disconnect();
     } catch (_) {}
 
     if (!mounted) return;
@@ -311,7 +313,7 @@ class _BluState extends State<Blu> {
                                       final ok = await ensureBlePermissions();
                                       if (!ok) {
                                         setState(() => _status =
-                                            "Bluetooth permission denied");
+                                            "Bluetooth permission denied. Please enable it in Settings.");
                                         return;
                                       }
                                       await _startScan();

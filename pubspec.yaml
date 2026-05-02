@@ -34,6 +34,7 @@ dependencies:
   permission_handler: ^11.3.1
   fl_chart: ^0.68.0
   shared_preferences: ^2.2.3
+  http: ^1.2.1
   
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -65,7 +66,8 @@ flutter:
 
 
   assets:
-    - assets/logo.png
+    - assets/sakina_fl_training.tflite
+    - assets/sakina_initial_weights.json
 
   fonts:
     - family: Aldhabi

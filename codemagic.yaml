@@ -14,10 +14,10 @@ workflows:
           find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign
-          cd build/ios/archive
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
           mkdir -p Payload
-          cp -r Runner.xcarchive/Products/Applications/Runner.app Payload/
+          cp -r Runner.app Payload/
           zip -r app.ipa Payload
     artifacts:
-      - build/ios/archive/app.ipa
+      - build/ios/iphoneos/app.ipa
